@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Home Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Home Page</h1>
+        <form id="adminForm">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name">
+            </div>
+            <div class="form-group">
+                <label for="userId">User ID:</label>
+                <input type="text" id="userId" name="userId">
+            </div>
+            <div class="form-group">
+                <label for="photoUpload">Upload a Photo:</label>
+                <input type="file" id="photoUpload" name="photoUpload">
+            </div>
+            <div class="form-group">
+                <label for="hash">Hash:</label>
+                <input type="text" id="hash" name="hash" readonly>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>
