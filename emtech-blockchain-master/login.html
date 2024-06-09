@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Login Page</h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="adminHash">Admin Hash:</label>
+                <input type="text" id="adminHash" name="adminHash">
+            </div>
+            <button type="button" id="loginButton">Login</button>
+        </form>
+    </div>
+
+    <!-- Back and Home Buttons -->
+    <button onclick="goBack()">Back</button>
+    <button onclick="goHome()">Home</button>
+
+    <!-- Web3 and MetaMask Integration -->
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script>
+        async function loadWeb3() {
+            if (window.ethereum) {
+                window.web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.enable(); // Request account access if needed
+                } catch (error) {
+                    console.error("User denied account access");
+                }
+            } else if (window.web3) {
+                web3 = new Web3(window.web3.currentProvider);
+            } else {
+                console.log("Non-Ethereum browser detected. You should consider trying MetaMask!");
+            }
+        }
+
+        async function loadContract() {
+            const response = await fetch('build/contracts/SimpleStorage.json');
+            const data = await response.json();
+            return new web3.eth.Contract(data.abi, '0x72ebD9B2fAa14c1A3489bBf1c35E0f18f9270f6b'); // Ensure this is the correct address
+        }
+
+        async function validateAdminHash() {
+            const adminHashInput = document.getElementById('adminHash').value;
+            const simpleStorage = await loadContract();
+            const recordCount = await simpleStorage.methods.getRecordCount().call();
+            console.log('Record count:', recordCount);
+
+            for (let i = 0; i < recordCount; i++) {
+                const record = await simpleStorage.methods.getRecord(i).call();
+                console.log('Checking record:', record);
+                if (record[2] === adminHashInput && record[3] === 'admin') {
+                    window.location.href = 'adminLanding.html';
+                    return;
+                }
+            }
+            alert('Invalid Admin Hash');
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        window.addEventListener('load', async () => {
+            await loadWeb3();
+        });
+
+        document.getElementById('loginButton').addEventListener('click', validateAdminHash);
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPE Department Records</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>ME Department Records</h1>
+        <table id="recordsTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>User ID</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Records will be inserted here -->
+            </tbody>
+        </table>
+        <button onclick="window.history.back()">Back</button>
+        <button onclick="goHome()">Home</button>
+    </div>
+
+    <!-- Web3 and MetaMask Integration -->
+    <script>
+        let web3;
+        let simpleStorage;
+
+        async function loadWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.enable(); // Request account access if needed
+                } catch (error) {
+                    console.error("User denied account access");
+                }
+            } else if (window.web3) {
+                web3 = new Web3(window.web3.currentProvider);
+            } else {
+                console.log("Non-Ethereum browser detected. You should consider trying MetaMask!");
+            }
+        }
+
+        async function loadContract() {
+            const response = await fetch('build/contracts/SimpleStorage.json');
+            const data = await response.json();
+            console.log('Loaded contract ABI:', data.abi);
+            return new web3.eth.Contract(data.abi, '0x72ebD9B2fAa14c1A3489bBf1c35E0f18f9270f6b'); // Ensure this is the correct address
+        }
+
+        async function fetchData() {
+            try {
+                simpleStorage = await loadContract();
+                const recordCount = await simpleStorage.methods.getRecordCount().call();
+                console.log('Record count:', recordCount);
+                const tableBody = document.getElementById('recordsTable').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = '';
+
+                for (let i = 0; i < recordCount; i++) {
+                    const record = await simpleStorage.methods.getRecord(i).call();
+                    if (record[4] === 'ME') { // Check if the user is in the CPE department
+                        console.log('Record:', record);
+                        const timeIn = record[5] > 0 ? new Date(record[5] * 1000).toLocaleString() : 'Not yet timed in';
+                        const timeOut = record[6] > 0 ? new Date(record[6] * 1000).toLocaleString() : 'Not yet timed out';
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${record[0]}</td>
+                            <td>${record[1]}</td>
+                            <td>${timeIn}</td>
+                            <td>${timeOut}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching records:', error);
+            }
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        window.addEventListener('load', async () => {
+            await loadWeb3();
+            await fetchData();
+        });
+    </script>
+</body>
+</html>

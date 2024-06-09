@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Home Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Home Page</h1>
+        <form id="adminForm">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name">
+            </div>
+            <div class="form-group">
+                <label for="userId">User ID:</label>
+                <input type="text" id="userId" name="userId">
+            </div>
+            <div class="form-group">
+                <label for="photoUpload">Upload a Photo:</label>
+                <input type="file" id="photoUpload" name="photoUpload">
+            </div>
+            <div class="form-group">
+                <label for="userType">User Type:</label>
+                <select id="userType" name="userType">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <select id="department" name="department">
+                    <option value="CPE">CPE Dept</option>
+                    <option value="ME">ME Dept</option>
+                    <option value="RE">RE Dept</option>
+                    <option value="CE">CE Dept</option>
+                    <!-- Add other departments as needed -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="hash">Hash:</label>
+                <input type="text" id="hash" name="hash" readonly>
+            </div>
+            <button type="button" id="submitButton">Submit</button>
+        </form>
+    </div>
+    <!-- Back and Home Buttons -->
+    <button onclick="goBack()">Back</button>
+    <button onclick="goHome()">Home</button>
+
+    <!-- Web3 and MetaMask Integration -->
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script>
+        document.getElementById('photoUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                generateHash(file);
+            }
+        });
+
+        async function generateHash(file) {
+            try {
+                if (window.crypto && window.crypto.subtle) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+                    document.getElementById('hash').value = hashHex;
+                    console.log('Generated hash:', hashHex); // Log the generated hash
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const hash = CryptoJS.SHA256(CryptoJS.lib.WordArray.create(event.target.result));
+                        const hashHex = hash.toString(CryptoJS.enc.Hex);
+                        document.getElementById('hash').value = hashHex;
+                        console.log('Generated hash:', hashHex); // Log the generated hash
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+            } catch (error) {
+                console.error('Error generating hash:', error);
+            }
+        }
+
+        async function loadWeb3() {
+            if (window.ethereum) {
+                window.web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.enable(); // Request account access if needed
+                } catch (error) {
+                    console.error("User denied account access");
+                }
+            } else if (window.web3) {
+                web3 = new Web3(window.web3.currentProvider);
+            } else {
+                console.log("Non-Ethereum browser detected. You should consider trying MetaMask!");
+            }
+        }
+
+        async function loadContract() {
+            const response = await fetch('build/contracts/SimpleStorage.json');
+            const data = await response.json();
+            console.log('Loaded contract ABI:', data.abi);
+            return new web3.eth.Contract(data.abi, '0x72ebD9B2fAa14c1A3489bBf1c35E0f18f9270f6b'); // Ensure this is the correct address
+        }
+
+        async function registerAccount(name, userId, hash, userType, department) {
+            try {
+                const accounts = await web3.eth.getAccounts();
+                const simpleStorage = await loadContract();
+                console.log('Sending transaction from account:', accounts[0]);
+                console.log('Registering account:', name, userId, hash, userType, department);
+                const receipt = await simpleStorage.methods.addRecord(name, userId, hash, userType, department).send({
+                    from: accounts[0],
+                    gas: 3000000, // specify gas limit
+                    gasPrice: web3.utils.toWei('20', 'gwei') // specify gas price
+                });
+                console.log('Transaction receipt:', receipt);
+            } catch (error) {
+                console.error('Error sending transaction:', error);
+                console.error('Error details:', error.message); // Log the error details
+            }
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        window.addEventListener('load', async () => {
+            await loadWeb3();
+        });
+
+        document.getElementById('submitButton').addEventListener('click', async () => {
+            const name = document.getElementById('name').value;
+            const userId = document.getElementById('userId').value;
+            const hash = document.getElementById('hash').value;
+            const userType = document.getElementById('userType').value;
+            const department = document.getElementById('department').value;
+            if (name && userId && hash && userType && department) {
+                await registerAccount(name, userId, hash, userType, department);
+            } else {
+                console.error('All fields are required');
+            }
+        });
+    </script>
+    <script src="scripts.js"></script>
+</body>
+</html>

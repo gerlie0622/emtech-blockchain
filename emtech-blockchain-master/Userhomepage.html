@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Home Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>User Home Page</h1>
+        <form id="userForm">
+            <div class="form-group">
+                <label for="hash">Hash:</label>
+                <input type="text" id="hash" name="hash">
+            </div>
+            <button type="button" id="timeInButton">Time In</button>
+            <button type="button" id="timeOutButton">Time Out</button>
+        </form>
+    </div>
+
+    <!-- Back and Home Buttons -->
+    <button onclick="goBack()">Back</button>
+    <button onclick="goHome()">Home</button>
+
+    <!-- Web3 and MetaMask Integration -->
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script>
+        let web3;
+        let simpleStorage;
+
+        async function loadWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.enable(); // Request account access if needed
+                } catch (error) {
+                    console.error("User denied account access");
+                }
+            } else if (window.web3) {
+                web3 = new Web3(window.web3.currentProvider);
+            } else {
+                console.log("Non-Ethereum browser detected. You should consider trying MetaMask!");
+            }
+        }
+
+        async function loadContract() {
+            const response = await fetch('build/contracts/SimpleStorage.json');
+            const data = await response.json();
+            return new web3.eth.Contract(data.abi, '0x72ebD9B2fAa14c1A3489bBf1c35E0f18f9270f6b'); // Ensure this is the correct address
+        }
+
+        async function addTimeIn(hash) {
+            try {
+                const accounts = await web3.eth.getAccounts();
+                simpleStorage = await loadContract();
+
+                // Find the record by hash
+                const recordCount = await simpleStorage.methods.getRecordCount().call();
+                for (let i = 0; i < recordCount; i++) {
+                    const record = await simpleStorage.methods.getRecord(i).call();
+                    console.log('Checking record for Time In:', record); // Added debugging
+                    if (record[2] === hash && record[5] == 0) { // Ensure the user has not already timed in
+                        const receipt = await simpleStorage.methods.setTimeIn(i).send({
+                            from: accounts[0],
+                            gas: 3000000, // specify gas limit
+                            gasPrice: web3.utils.toWei('20', 'gwei') // specify gas price
+                        });
+                        console.log('Time In Transaction receipt:', receipt);
+                        return; // Exit after timing in the correct record
+                    }
+                }
+                console.error('No matching record found for the provided hash');
+            } catch (error) {
+                console.error('Error sending Time In transaction:', error);
+            }
+        }
+
+        async function addTimeOut(hash) {
+            try {
+                const accounts = await web3.eth.getAccounts();
+                simpleStorage = await loadContract();
+                const recordCount = await simpleStorage.methods.getRecordCount().call();
+                console.log('Total records:', recordCount);
+
+                for (let i = 0; i < recordCount; i++) {
+                    const record = await simpleStorage.methods.getRecord(i).call();
+                    console.log('Checking record for Time Out:', record);
+                    if (record[2] === hash && record[5] != 0 && record[6] == 0) { // Ensure the user has timed in but not timed out
+                        console.log('Found record to time out:', record);
+                        const receipt = await simpleStorage.methods.setTimeOut(i).send({
+                            from: accounts[0],
+                            gas: 3000000, // specify gas limit
+                            gasPrice: web3.utils.toWei('20', 'gwei') // specify gas price
+                        });
+                        console.log('Time Out Transaction receipt:', receipt);
+                        return; // Exit after timing out the correct record
+                    }
+                }
+                console.error('No matching record found for the provided hash or user has not timed in yet');
+            } catch (error) {
+                console.error('Error sending Time Out transaction:', error);
+            }
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        window.addEventListener('load', async () => {
+            await loadWeb3();
+        });
+
+        document.getElementById('timeInButton').addEventListener('click', async () => {
+            const hash = document.getElementById('hash').value;
+            if (hash) {
+                await addTimeIn(hash);
+            } else {
+                console.error('Hash is required');
+            }
+        });
+
+        document.getElementById('timeOutButton').addEventListener('click', async () => {
+            const hash = document.getElementById('hash').value;
+            if (hash) {
+                await addTimeOut(hash);
+            } else {
+                console.error('Hash is required');
+            }
+        });
+    </script>
+</body>
+</html>

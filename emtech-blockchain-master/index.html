@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Decentralized Attendance Portal</h1>
+        <div class="buttons">
+            <button id="adminButton">Login as Admin</button>
+            <button id="userButton">Login as User</button>
+        </div>
+    </div>
+
+    <!-- Web3 and MetaMask Integration -->
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script>
+        async function loadWeb3() {
+            if (window.ethereum) {
+                window.web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.enable(); // Request account access if needed
+                } catch (error) {
+                    console.error("User denied account access");
+                }
+            } else if (window.web3) {
+                window.web3 = new Web3(web3.currentProvider);
+            } else {
+                console.log("Non-Ethereum browser detected. You should consider trying MetaMask!");
+            }
+        }
+
+        async function loadContract() {
+            const response = await fetch('build/contracts/SimpleStorage.json');
+            const data = await response.json();
+            return new web3.eth.Contract(data.abi, '0x72ebD9B2fAa14c1A3489bBf1c35E0f18f9270f6b');
+        }
+
+        async function setData(value) {
+            const accounts = await web3.eth.getAccounts();
+            const simpleStorage = await loadContract();
+            await simpleStorage.methods.set(value).send({ from: accounts[0] });
+        }
+
+        async function getData() {
+            const simpleStorage = await loadContract();
+            const value = await simpleStorage.methods.get().call();
+            console.log(value);
+        }
+
+        document.getElementById('adminButton').addEventListener('click', () => {
+            console.log('Redirecting to login.html');
+            window.location.href = 'login.html';
+        });
+
+        document.getElementById('userButton').addEventListener('click', () => {
+            console.log('Redirecting to userHomePage.html');
+            window.location.href = 'userHomePage.html';
+        });
+
+        window.addEventListener('load', async () => {
+            await loadWeb3();
+            console.log('Web3 loaded');
+        });
+    </script>
+</body>
+</html>
