@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Page</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=1.1">
 </head>
 <body>
     <div class="container">
@@ -14,13 +14,15 @@
                 <label for="adminHash">Admin Hash:</label>
                 <input type="text" id="adminHash" name="adminHash">
             </div>
-            <button type="button" id="loginButton">Login</button>
+            <div class="form-group">
+                <button type="button" id="loginButton">Login</button>
+            </div>
         </form>
+        <div class="nav-buttons">
+            <button onclick="goBack()">Back</button>
+            <button onclick="goHome()">Home</button>
+        </div>
     </div>
-
-    <!-- Back and Home Buttons -->
-    <button onclick="goBack()">Back</button>
-    <button onclick="goHome()">Home</button>
 
     <!-- Web3 and MetaMask Integration -->
     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
@@ -43,7 +45,7 @@
         async function loadContract() {
             const response = await fetch('build/contracts/SimpleStorage.json');
             const data = await response.json();
-            return new web3.eth.Contract(data.abi, '0x72ebD9B2fAa14c1A3489bBf1c35E0f18f9270f6b'); // Ensure this is the correct address
+            return new web3.eth.Contract(data.abi, '0x74d4a5d99ab41721762cb49d7594cbd3222dbf52'); // Ensure this is the correct address
         }
 
         async function validateAdminHash() {

@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Landing Page</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=1.1">
 </head>
 <body>
     <div class="container">
         <h1>Welcome to the Decentralized Attendance Portal</h1>
         <div class="buttons">
             <button id="adminButton">Login as Admin</button>
-            <button id="userButton">Login as User</button>
+            <button id="userButton">Attendance</button>
         </div>
     </div>
 
@@ -36,7 +36,7 @@
         async function loadContract() {
             const response = await fetch('build/contracts/SimpleStorage.json');
             const data = await response.json();
-            return new web3.eth.Contract(data.abi, '0x72ebD9B2fAa14c1A3489bBf1c35E0f18f9270f6b');
+            return new web3.eth.Contract(data.abi, '0x74d4a5d99ab41721762cb49d7594cbd3222dbf52');
         }
 
         async function setData(value) {

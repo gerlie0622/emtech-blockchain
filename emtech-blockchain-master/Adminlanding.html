@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Landing Page</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=1.1">
 </head>
 <body>
     <div class="container">
-        <h1>Admin Landing Page</h1>
+        <h1>Admin Dashboard</h1>
         <div class="buttons">
             <button id="viewRecordButton">View Record</button>
             <button id="createAccountButton">Create Account</button>
         </div>
+        <div class="nav-buttons">
+            <button onclick="goBack()">Back</button>
+            <button onclick="goHome()">Home</button>
+        </div>
     </div>
-
-    <!-- Back and Home Buttons -->
-    <button onclick="goBack()">Back</button>
-    <button onclick="goHome()">Home</button>
 
     <!-- Web3 and MetaMask Integration -->
     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
